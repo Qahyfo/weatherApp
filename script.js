@@ -21,64 +21,69 @@ const city = document.getElementById('city')
 const popup = document.getElementById('popup')
 const textInput = document.getElementById('text-input')
 const form = document.getElementById('form')
+const closePopup = document.getElementById('close')
 
 const fetchData = async () => {
-  const result = await fetch(`${link}&query=${store.city}`);
-  const data = await result.json()
+  try {
+    const result = await fetch(`${link}&query=${store.city}`);
+    const data = await result.json()
 
-  const {
-    current: {
-      cloudcover,
+    const {
+      current: {
+        cloudcover,
+        temperature,
+        humidity,
+        pressure,
+        uv_index: uvIndex,
+        observation_time: observationTime,
+        wind_speed: windSpeed,
+        weather_descriptions: description,
+        is_day: isDay,
+        visibility
+      }
+    } = data
+
+    store = {
+      ...store,
+      observationTime,
       temperature,
-      humidity,
       pressure,
-      uv_index: uvIndex,
-      observation_time: observationTime,
-      wind_speed: windSpeed,
-      weather_descriptions: description,
-      is_day: isDay,
-      visibility
+      description: description[0],
+      isDay,
+      properties: {
+        cloudcover: {
+          title: "Cloudcover",
+          value: `${cloudcover}`,
+          icon: "cloud.png"
+        },
+        humidity: {
+          title: "Humidity",
+          value: `${humidity}`,
+          icon: 'humidity.png'
+        },
+        windSpeed: {
+          title: "Wind Speed",
+          value: `${windSpeed} km/h`,
+          icon: 'wind.png'
+        },
+        visibility: {
+          title: "Visibility",
+          value: `${visibility}`,
+          icon: "visibility.png"
+        },
+        uvIndex: {
+          title: "Uv Index",
+          value: `${uvIndex} / 100`,
+          icon: "uv-index.png"
+        },
+      }
     }
-  } = data
 
-  store = {
-    ...store,
-    observationTime,
-    temperature,
-    pressure,
-    description: description[0],
-    isDay,
-    properties: {
-      cloudcover: {
-        title: "Cloudcover",
-        value: `${cloudcover}`,
-        icon: "cloud.png"
-      },
-      humidity: {
-        title: "Humidity",
-        value: `${humidity}`,
-        icon: 'humidity.png'
-      },
-      windSpeed: {
-        title: "Wind Speed",
-        value: `${windSpeed} km/h`,
-        icon: 'wind.png'
-      },
-      visibility: {
-        title: "Visibility",
-        value: `${visibility}`,
-        icon: "visibility.png"
-      },
-      uvIndex: {
-        title: "Uv Index",
-        value: `${uvIndex} / 100`,
-        icon: "uv-index.png"
-      },
-    }
+    renderComponent()
+    console.log(store.properties)
+  } catch (err) {
+    console.log(err)
   }
-
-  renderComponent()
-  console.log(store.properties)
 }
 
 const getImage = (description) => {
@@ -145,7 +150,7 @@ const markup = () => {
 </div>`;
 }
 
-const hengleClick = () => {
+const hengleClickPopup = () => {
   popup.classList.toggle('active')
 }
 
@@ -153,7 +158,7 @@ const renderComponent = () => {
   root.innerHTML = markup()
 
   const city = document.getElementById('city')
-  city.addEventListener('click', hengleClick)
+  city.addEventListener('click', hengleClickPopup)
 }
 
 const handleInput = (e) => {
@@ -167,12 +172,23 @@ const handleInput = (e) => {
 const hangleSubmit = (e) => {
   e.preventDefault()
 
+  const valueCity = store.city
+
+  if (!valueCity) return null //дабы не было возможности прокинуть пустую строчку
+
+  fetchData();
+  hengleClickPopup();
+}
+
+const hangleClosePopup = () => {
+  hengleClickPopup();
+
   fetchData()
-  handleInput()
 }
 
 textInput.addEventListener('input', handleInput)
 form.addEventListener('submit', hangleSubmit)
+closePopup.addEventListener('click', hangleClosePopup)
 
 
 
